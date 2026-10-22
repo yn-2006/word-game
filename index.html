@@ -368,7 +368,7 @@ function buildPool(){
     if(state.category!=="all" && state.category!==key) continue;
     for(var i=0;i<DATA[key].items.length;i++){
       var it = DATA[key].items[i];
-      arr.push({w:it.w, m:it.m, common:it.common||null, group:key, groupLabel:DATA[key].label});
+      arr.push({w:it.w, m:it.m, common:it.common||null, base:it.base||null, group:key, groupLabel:DATA[key].label});
     }
   }
   // 合并用户自定义生词
@@ -377,7 +377,7 @@ function buildPool(){
     if(!c || !c.w || !c.m) continue;
     var gname = c.group || "我的生词";
     if(state.category==="all" || state.category===("c:"+gname)){
-      arr.push({w:c.w, m:c.m, common:c.common||null, group:"c:"+gname, groupLabel:gname});
+      arr.push({w:c.w, m:c.m, common:c.common||null, base:c.base||null, group:"c:"+gname, groupLabel:gname});
     }
   }
   return shuffle(arr);
