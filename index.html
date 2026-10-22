@@ -70,6 +70,8 @@
   .word-cn{font-size:21px; text-align:center; color:var(--primary); font-weight:600; margin:8px 0 2px; word-break:break-word;}
   .word-base{text-align:center; font-size:13.5px; color:var(--muted); margin-top:6px;}
   .word-base b{color:var(--pink); font-family:Georgia,serif; font-size:15px;}
+  .word-derive{text-align:center; font-size:13px; color:var(--muted); margin-top:4px;}
+  .word-derive b{color:#8b5cf6; font-family:Georgia,serif; font-size:14.5px;}
   .word-common{font-size:14px; text-align:center; color:var(--muted); margin-top:10px;}
   .word-common .c{color:#9ca3af; text-decoration:line-through; margin-right:8px;}
   .word-common .arrow{color:var(--pink); font-weight:700;}
@@ -241,7 +243,7 @@ var DATA = {
     label: "图片画线语境生词",
     desc: "文中画横线的不懂词 · 词义",
     items: [
-      {w:"diagnosis", m:"n. 诊断（结果）"},
+      {w:"diagnosis", m:"n. 诊断（结果）", dv:"diagnose", dvLabel:"动词形式"},
       {w:"spouse", m:"n. 配偶"},
       {w:"stripes", m:"n. 种类、类型（of all stripes 各色各样的）", base:"stripe"},
       {w:"budgeted", m:"v. 按预算安排；精打细算", base:"budget"},
@@ -249,7 +251,7 @@ var DATA = {
       {w:"weather", m:"v. 经受住、度过（困难）"},
       {w:"absorb", m:"v. 承担、承受（风险/成本）"},
       {w:"interest rates", m:"n. 利率", base:"interest rate"},
-      {w:"fluctuation", m:"n. 波动"},
+      {w:"fluctuation", m:"n. 波动", dv:"fluctuate", dvLabel:"动词形式"},
       {w:"harsh reality", m:"n. 严酷现实"},
       {w:"outlive", m:"v. 活得比…久；耗尽（退休金）"},
       {w:"campaigned", m:"v. 发起运动、推动改革", base:"campaign"},
@@ -258,11 +260,11 @@ var DATA = {
       {w:"guaranteed", m:"adj. 有保障的", base:"guarantee"},
       {w:"healthcare", m:"n. 医疗保健"},
       {w:"borne", m:"v. 承担（bear 的过去分词）", base:"bear"},
-      {w:"legislative", m:"adj. 立法的、立法机构的"},
+      {w:"legislative", m:"adj. 立法的、立法机构的", dv:"legislate", dvLabel:"动词形式"},
       {w:"deductibles", m:"n.（保险）免赔额", base:"deductible"},
       {w:"dose", m:"n. 剂量；比喻“一份/大量”"},
       {w:"demographics", m:"n. 人口统计数据、人口特征", base:"demographic"},
-      {w:"attendant", m:"adj. 伴随的、随之而来的"},
+      {w:"attendant", m:"adj. 伴随的、随之而来的", dv:"attend", dvLabel:"动词形式"},
       {w:"eightfold", m:"adv./adj. 八倍（的）"},
       {w:"overburdened", m:"adj. 不堪重负的", base:"overburden"},
       {w:"fallout", m:"n.（负面）后果、余波"}
@@ -278,7 +280,7 @@ var DATA = {
       {w:"outlive", common:"v. 比…活得久", m:"v. 耗尽（退休金）"},
       {w:"dose", common:"n.（药）剂量", m:"n. 大量、一份（风险）"},
       {w:"campaign", common:"n. 战役；运动", m:"v. 发起运动、推动"},
-      {w:"solidly", common:"adv. 坚固地", m:"adv. 稳固地、完全地"},
+      {w:"solidly", common:"adv. 坚固地", m:"adv. 稳固地、完全地", dv:"solid", dvLabel:"形容词形式"},
       {w:"make up", common:"组成；化妆", m:"弥补、补偿"}
     ]
   },
@@ -359,6 +361,10 @@ function baseHtml(item){
   if(!item || !item.base) return "";
   return '<div class="word-base">原型：<b>'+esc(item.base)+'</b></div>';
 }
+function deriveHtml(item){
+  if(!item || !item.dv) return "";
+  return '<div class="word-derive">'+esc(item.dvLabel||"相关形式")+'：<b>'+esc(item.dv)+'</b></div>';
+}
 
 function buildPool(){
   var arr = [];
@@ -368,7 +374,7 @@ function buildPool(){
     if(state.category!=="all" && state.category!==key) continue;
     for(var i=0;i<DATA[key].items.length;i++){
       var it = DATA[key].items[i];
-      arr.push({w:it.w, m:it.m, common:it.common||null, base:it.base||null, group:key, groupLabel:DATA[key].label});
+      arr.push({w:it.w, m:it.m, common:it.common||null, base:it.base||null, dv:it.dv||null, dvLabel:it.dvLabel||null, group:key, groupLabel:DATA[key].label});
     }
   }
   // 合并用户自定义生词
@@ -377,7 +383,7 @@ function buildPool(){
     if(!c || !c.w || !c.m) continue;
     var gname = c.group || "我的生词";
     if(state.category==="all" || state.category===("c:"+gname)){
-      arr.push({w:c.w, m:c.m, common:c.common||null, base:c.base||null, group:"c:"+gname, groupLabel:gname});
+      arr.push({w:c.w, m:c.m, common:c.common||null, base:c.base||null, dv:c.dv||null, dvLabel:c.dvLabel||null, group:"c:"+gname, groupLabel:gname});
     }
   }
   return shuffle(arr);
@@ -562,6 +568,7 @@ function renderFlash(){
       '<div class="badge-mastered'+(mastered?" show":"")+'">已掌握</div>' +
       '<div class="word-en">'+esc(item.w)+'</div>' +
       baseHtml(item) +
+      deriveHtml(item) +
       cnHtml +
       '<div class="btn-row">' +
         '<button class="btn speak" onclick="speakCurrent()">听发音</button>' +
@@ -686,7 +693,7 @@ function choose(i){
     if(isQuiz && cur.item) speak(cur.item.w);
     var ansHtml;
     if(isQuiz){
-      ansHtml = '<div class="ans-block"><div class="ans-en">'+esc(cur.item.w)+'</div>'+baseHtml(cur.item)+'<div class="ans-cn">'+esc(cur.item.m)+'</div></div>';
+      ansHtml = '<div class="ans-block"><div class="ans-en">'+esc(cur.item.w)+'</div>'+baseHtml(cur.item)+deriveHtml(cur.item)+'<div class="ans-cn">'+esc(cur.item.m)+'</div></div>';
     } else {
       var ansTxt = cur.pickMeaning ? cur.item.w+" — "+cur.item.m : cur.item.m;
       ansHtml = '<div class="ans">正确答案：'+esc(ansTxt)+'</div>';
@@ -728,7 +735,7 @@ function startQuiz(){
   var b = buildOptions(item, true);
   cur.opts = b.opts; cur.correct = b.correct;
   answerBox(item,
-    '<div class="q-word"><div class="en">'+esc(item.w)+'</div>'+baseHtml(item)+'</div>' +
+    '<div class="q-word"><div class="en">'+esc(item.w)+'</div>'+baseHtml(item)+deriveHtml(item)+'</div>' +
     '<div class="btn-row" style="margin-top:10px;"><button class="btn speak small" onclick="speakCurrentQuiz()">听发音</button></div>' +
     '<div class="q-prompt">选出该词对应的中文意思</div>',
     "", "");
@@ -758,7 +765,7 @@ function startQuestion(kind){
   if(kind==="listen"){
     var b2 = buildOptions(item, true);
     cur.opts = b2.opts; cur.correct = b2.correct;
-    var hintHtml = '<div class="q-word" id="listenWord" style="display:none;"><div class="en" style="font-size:20px;color:#6b7280;">'+esc(item.w)+'</div>'+baseHtml(item)+'</div>';
+    var hintHtml = '<div class="q-word" id="listenWord" style="display:none;"><div class="en" style="font-size:20px;color:#6b7280;">'+esc(item.w)+'</div>'+baseHtml(item)+deriveHtml(item)+'</div>';
     answerBox(item,
       '<div class="listen-btn-wrap"><button class="listen-big" id="listenBtn" onclick="replayListen()">' + speakerSVG() + '</button></div>' +
       hintHtml +
